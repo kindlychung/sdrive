@@ -21,7 +21,7 @@ import org.docopt.Docopt
 
 class Dummy
 
-object SDrive {
+object SDrive extends App {
   val doc =
     """Usage:
       |  sdrive [--desc] [--zipdir=<zd>] <file>...
@@ -33,22 +33,38 @@ object SDrive {
   private val APPLICATION_NAME: String = "sdrive"
   private val DATA_STORE_DIR: JFile = new JFile(System.getProperty("user.home"), ".credentials")
   private val JSON_FACTORY: JsonFactory = JacksonFactory.getDefaultInstance
-  private val contentInfoUtil = new ContentInfoUtil()
   private val dataStoreFactory: FileDataStoreFactory = new FileDataStoreFactory(DATA_STORE_DIR)
   private val httpTransport: HttpTransport = GoogleNetHttpTransport.newTrustedTransport
   val credential: Credential = authorize
   private val drive: Drive = new Drive.Builder(httpTransport, JSON_FACTORY, credential).setApplicationName(APPLICATION_NAME).build
 
-  def main(_args: Array[String]): Unit = {
+  main1(args)
+
+  def main1(_args: Array[String]): Unit = {
     val args = Docopt(doc, _args)
     val desc = args.getBoolean("--desc", default = false)
     val files = args.getStrings("<file>")
     val zd = args.getString("--zipdir")
     var descriptionFile: JFile = null
-    val filesToUpload = files.map(x => new JFile(x))
+    var filesToUpload = files.map(x => new JFile(x))
     assume(filesToUpload.forall(_.exists()), "Some of files don't exist.")
+
+    def containsFile(f1: JFile, f2: JFile): Boolean = {
+      if(f1.isDirectory) {
+        f1.listFiles().map(x => x.getAbsoluteFile).contains(f2.getAbsoluteFile)
+      } else {
+        false
+      }
+    }
+
+    // if the description file is already contained in one of the folders to be uploaded,
+    // then the description file itself needn't be in the uploading list.
     if (desc) {
       descriptionFile = filesToUpload.last
+      val nonDescriptionFiles = filesToUpload.dropRight(1)
+      if(nonDescriptionFiles.exists(containsFile(_, descriptionFile))) {
+        filesToUpload = nonDescriptionFiles
+      }
     }
 
     try {
@@ -118,14 +134,8 @@ object SDrive {
       zipDir = Paths.get(_zipDir)
     }
     zipDir.toFile.mkdir()
-    //    val nonDescriptionPaths = fileList.filter(_ != description).map(_.toPath)
-    //    nonDescriptionPaths.foreach(x => {
-    //      val dest = new java.io.File(zipDir.toFile, x.toFile.getName)
-    //      Files.copy(x, dest.toPath, StandardCopyOption.REPLACE_EXISTING)
-    //    })
-    //    Files.copy(description.toPath, new JFile(zipDir.toFile, description.getName).toPath, StandardCopyOption.REPLACE_EXISTING)
-    for (elem <- fileList.map(_.toPath)) {
-      Files.copy(elem, new JFile(zipDir.toFile, elem.toFile.getName).toPath, StandardCopyOption.REPLACE_EXISTING)
+    for (elem <- fileList) {
+      FileUtil.copyToDir(elem, zipDir.toFile)
     }
     uploadFile(zipDir.toFile, parentId = parentId, description = description)
   }
@@ -160,10 +170,8 @@ object SDrive {
         streams._4.close()
       }
     } else {
-      val mimeType = {
-        val m = contentInfoUtil.findMatch(file)
-        if (m == null) _mimeType else m.getMimeType
-      }
+      val mimeType = FileUtil.getMime(file)
+      println(s"${file.getName}: ${mimeType}")
       val fileMetadata = createMetaData(file.getName, mimeType, parentId, desc.toString)
       val mediaContent: FileContent = new FileContent(mimeType, file)
       drive.files.create(fileMetadata, mediaContent).setFields("id, parents").execute()

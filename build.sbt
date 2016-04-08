@@ -14,6 +14,9 @@ libraryDependencies += "com.j256.simplemagic" % "simplemagic" % "1.6"
 
 libraryDependencies += "org.apache.commons" % "commons-compress" % "1.11"
 
+libraryDependencies += "org.apache.directory.studio" % "org.apache.commons.io" % "2.4"
+
+
 
 resolvers += "Chunliang's Maven Repository" at "https://repo.chunlianglyu.com"
 
