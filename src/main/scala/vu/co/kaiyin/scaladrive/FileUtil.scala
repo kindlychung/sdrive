@@ -25,7 +25,9 @@ object FileUtil {
     }
   }
   def getMime(f: File): String = {
-    MimeUtil.getMostSpecificMimeType(MimeUtil.getMimeTypes(f)).toString
+    // google drive seems to have trouble with decoding compressed files, disable this for the moment
+//    MimeUtil.getMostSpecificMimeType(MimeUtil.getMimeTypes(f)).toString
+    "application/octet-stream"
   }
 
   // like the unix tree command

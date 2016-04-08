@@ -3,6 +3,7 @@ package vu.co.kaiyin.scaladrive
 import java.io.{File => JFile, _}
 import java.nio.charset.Charset
 import java.nio.file.{Path, Paths}
+import java.util.zip.ZipOutputStream
 import java.util.{Calendar, Collections}
 
 import com.google.api.client.auth.oauth2.Credential
@@ -153,7 +154,7 @@ object SDrive extends App {
     var filePath = Paths.get(file.getAbsolutePath)
     // if file is dir, then zip it and upload the zipped file instead.
     if (file.isDirectory) {
-      val tgzFile = ZipArchiveUtil.tgzFile(filePath)
+      val zfile = ZipArchiveUtil.zipFile(filePath)
       val fileList = FileUtil.tree(new StringBuffer(), file.toPath)
       // append file list to description file
       if (description != null) {
@@ -162,16 +163,14 @@ object SDrive extends App {
       }
 
 
-      val streams = ZipArchiveUtil.tarStream(tgzFile)
+      val fos = new FileOutputStream(zfile)
+      val zos = new ZipOutputStream(fos)
       try {
-        ZipArchiveUtil.addToTgz(streams._1, file)
-        uploadFile(tgzFile, _mimeType, parentId, description)
+        ZipArchiveUtil.addOneEntry(zos, file)
+        uploadFile(zfile, _mimeType, parentId, description)
       } finally {
-        streams._1.finish()
-        streams._1.close()
-        streams._2.close()
-        streams._3.close()
-        streams._4.close()
+        zos.finish()
+        zos.close()
       }
 
 
