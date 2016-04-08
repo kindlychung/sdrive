@@ -1,15 +1,22 @@
 package vu.co.kaiyin.scaladrive
 
-import java.io.File
+import java.io.{File, IOException}
+import java.nio.file.{AccessDeniedException, Files, Path}
 
-import com.j256.simplemagic.ContentInfoUtil
+import eu.medsea.mimeutil.MimeUtil
+import eu.medsea.mimeutil.detector.{ExtensionMimeDetector, MagicMimeMimeDetector, OpendesktopMimeDetector}
 import org.apache.commons.io.FileUtils
+import resource._
+
+import scala.collection.mutable.ArrayBuffer
 
 /**
   * Created by IDEA on 4/8/16.
   */
 object FileUtil {
-  val infoUtil = new ContentInfoUtil()
+  MimeUtil.registerMimeDetector(classOf[MagicMimeMimeDetector].getName)
+  MimeUtil.registerMimeDetector(classOf[ExtensionMimeDetector].getName)
+  MimeUtil.registerMimeDetector(classOf[OpendesktopMimeDetector].getName)
   def copyToDir(src: File, dest: File): Unit = {
     if(src.isFile) {
       FileUtils.copyFileToDirectory(src, dest)
@@ -18,15 +25,26 @@ object FileUtil {
     }
   }
   def getMime(f: File): String = {
+    MimeUtil.getMostSpecificMimeType(MimeUtil.getMimeTypes(f)).toString
+  }
+
+  // like the unix tree command
+  def tree(fileNames: StringBuffer, dir: Path): String = {
     try {
-      val i = infoUtil.findMatch(f).getMimeType
+      for (stream <- managed(Files.newDirectoryStream(dir))){
+        val it = stream.iterator()
+        while(it.hasNext) {
+          val path = it.next()
+          if(path.toFile().isDirectory) {
+            tree(fileNames, path)
+          } else {
+            fileNames.append(path.toAbsolutePath).append("\n")
+          }
+        }
+      }
     } catch {
-      case e: NullPointerException =>
+      case e: AccessDeniedException =>
     }
-    try {
-      infoUtil.findMatch(f).getMimeType
-    } catch {
-      case e: NullPointerException => "application/octet-stream"
-    }
+    fileNames.toString
   }
 }

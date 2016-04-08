@@ -2,7 +2,7 @@ package vu.co.kaiyin.scaladrive
 
 import java.io.{File => JFile, _}
 import java.nio.charset.Charset
-import java.nio.file.{Files, Path, Paths, StandardCopyOption}
+import java.nio.file.{Path, Paths}
 import java.util.{Calendar, Collections}
 
 import com.google.api.client.auth.oauth2.Credential
@@ -16,8 +16,8 @@ import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.client.util.store.FileDataStoreFactory
 import com.google.api.services.drive.model.File
 import com.google.api.services.drive.{Drive, DriveScopes}
-import com.j256.simplemagic.ContentInfoUtil
 import org.docopt.Docopt
+import resource._
 
 class Dummy
 
@@ -140,6 +140,7 @@ object SDrive extends App {
     uploadFile(zipDir.toFile, parentId = parentId, description = description)
   }
 
+
   @throws[IOException]
   private def uploadFile(file: JFile, _mimeType: String = "application/octet-stream", parentId: String = null, description: JFile = null): File = {
     assume(file.exists(), s"${file.getName} doesn't exist!")
@@ -153,11 +154,14 @@ object SDrive extends App {
     // if file is dir, then zip it and upload the zipped file instead.
     if (file.isDirectory) {
       val tgzFile = ZipArchiveUtil.tgzFile(filePath)
-      val fileList = file.listFiles().map(_.getName).mkString("\n", "\n", "\n")
+      val fileList = FileUtil.tree(new StringBuffer(), file.toPath)
+      // append file list to description file
       if (description != null) {
         val ofs = new FileOutputStream(description, true)
         try ofs.write(fileList.getBytes(Charset.forName("utf-8"))) finally ofs.close()
       }
+
+
       val streams = ZipArchiveUtil.tarStream(tgzFile)
       try {
         ZipArchiveUtil.addToTgz(streams._1, file)
@@ -169,6 +173,8 @@ object SDrive extends App {
         streams._3.close()
         streams._4.close()
       }
+
+
     } else {
       val mimeType = FileUtil.getMime(file)
       println(s"${file.getName}: ${mimeType}")

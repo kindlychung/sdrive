@@ -5,16 +5,21 @@ version := "1.0.1"
 scalaVersion := "2.11.7"
 
 libraryDependencies ++= List(
-"com.google.api-client" % "google-api-client" % "1.21.0",
-"com.google.oauth-client" % "google-oauth-client-jetty" % "1.21.0",
-"com.google.apis" % "google-api-services-drive" % "v3-rev6-1.21.0"
+  "com.google.api-client" % "google-api-client" % "1.21.0",
+  "com.google.oauth-client" % "google-oauth-client-jetty" % "1.21.0",
+  "com.google.apis" % "google-api-services-drive" % "v3-rev6-1.21.0"
 )
 
-libraryDependencies += "com.j256.simplemagic" % "simplemagic" % "1.6"
+libraryDependencies += "com.madgag" % "scala-arm_2.11" % "1.3.4"
+
+
+//libraryDependencies += "com.j256.simplemagic" % "simplemagic" % "1.6"
 
 libraryDependencies += "org.apache.commons" % "commons-compress" % "1.11"
 
 libraryDependencies += "org.apache.directory.studio" % "org.apache.commons.io" % "2.4"
+
+libraryDependencies += "eu.medsea.mimeutil" % "mime-util" % "2.1.3"
 
 
 
