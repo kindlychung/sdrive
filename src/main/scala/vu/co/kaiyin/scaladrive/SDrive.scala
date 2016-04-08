@@ -50,7 +50,7 @@ object SDrive extends App {
     assume(filesToUpload.forall(_.exists()), "Some of files don't exist.")
 
     def containsFile(f1: JFile, f2: JFile): Boolean = {
-      if(f1.isDirectory) {
+      if (f1.isDirectory) {
         f1.listFiles().map(x => x.getAbsoluteFile).contains(f2.getAbsoluteFile)
       } else {
         false
@@ -62,7 +62,7 @@ object SDrive extends App {
     if (desc) {
       descriptionFile = filesToUpload.last
       val nonDescriptionFiles = filesToUpload.dropRight(1)
-      if(nonDescriptionFiles.exists(containsFile(_, descriptionFile))) {
+      if (nonDescriptionFiles.exists(containsFile(_, descriptionFile))) {
         filesToUpload = nonDescriptionFiles
       }
     }
@@ -99,7 +99,9 @@ object SDrive extends App {
 
   def createMetaData(name: String, mimetype: String = "application/octet-stream", parentId: String = null, description: String = ""): File = {
     val fileMetadata = new File()
-    fileMetadata.setName(name).setMimeType(mimetype).setDescription(description)
+    fileMetadata.setName(name)
+    fileMetadata.setMimeType(mimetype)
+    fileMetadata.setDescription(description)
     if (parentId != null) {
       fileMetadata.setParents(Collections.singletonList(parentId))
     }
