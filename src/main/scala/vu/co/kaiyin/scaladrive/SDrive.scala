@@ -24,7 +24,7 @@ class Dummy
 object SDrive {
   val doc =
     """Usage:
-      |  scaladrive [--desc] [--zipdir=<zd>] <file>...
+      |  sdrive [--desc] [--zipdir=<zd>] <file>...
       |
       |Options:
       |  --desc           To specify that the last file is a description for this upload.
