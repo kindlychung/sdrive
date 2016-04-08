@@ -10,6 +10,7 @@ import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInsta
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver
 import com.google.api.client.googleapis.auth.oauth2.{GoogleAuthorizationCodeFlow, GoogleClientSecrets}
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
+import com.google.api.client.googleapis.media.{MediaHttpUploader, MediaHttpUploaderProgressListener}
 import com.google.api.client.http.{FileContent, HttpTransport}
 import com.google.api.client.json.JsonFactory
 import com.google.api.client.json.jackson2.JacksonFactory
@@ -182,7 +183,15 @@ object SDrive extends App {
       println(s"${file.getName}: ${mimeType}")
       val fileMetadata = createMetaData(file.getName, mimeType, parentId, desc.toString)
       val mediaContent: FileContent = new FileContent(mimeType, file)
-      drive.files.create(fileMetadata, mediaContent).setFields("id, parents").execute()
+      val insert = drive.files().create(fileMetadata, mediaContent);
+      val uploader = insert.getMediaHttpUploader();
+      uploader.setDirectUploadEnabled(true);
+      uploader.setProgressListener(new MediaHttpUploaderProgressListener {
+        override def progressChanged(uploader: MediaHttpUploader): Unit = {
+          println(s"Uploading: ${uploader.getProgress * 100} %")
+        }
+      });
+      return insert.execute();
     }
   }
 
