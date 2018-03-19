@@ -23,9 +23,9 @@ libraryDependencies += "eu.medsea.mimeutil" % "mime-util" % "2.1.3"
 
 
 
-resolvers += "Chunliang's Maven Repository" at "https://repo.chunlianglyu.com"
+resolvers += "jitpack" at "https://jitpack.io"
 
-libraryDependencies += "com.chunlianglyu.docopt2" %% "docopt2" % "0.2"
+libraryDependencies += "com.github.kindlychung" % "docopt.scala" % "0.2.2"
 
 
 // The main class name must be full (including package names)
